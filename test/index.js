@@ -6,7 +6,8 @@ var hc = require('../lib/node-highcharts'),
 			renderTo: 'container',
 			renderer: 'SVG',
 			width: 800,
-			height: 600
+			height: 600,
+			tooltipTick: null
 		},
 		series: [{
 			animation: false,
@@ -15,5 +16,6 @@ var hc = require('../lib/node-highcharts'),
 	};
 	
 hc.render(options, function(result, err) {
+	console.log('what?');
 	fs.writeFile('chart.png', result, function() { console.log('done'); });
 });

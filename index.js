@@ -47,6 +47,7 @@ var createHighchartsWindow = function(fn) {
 }
 
 this.server = http.createServer(function(request, response) {
+	console.log("request");
 	var url 		= parse(request.url, true),
 		chartTypeMatch 	= /^\/(\w+)$/.exec(url.pathname),
 		chartType	= chartTypeMatch ? chartTypeMatch[1] : null,
