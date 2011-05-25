@@ -15,7 +15,7 @@ var hc = require('../lib/node-highcharts'),
 		}]
 	};
 	
-hc.render(options, function(result, err) {
+hc.render(options, 'svg', function(result, err) {
 	console.log('what?');
-	fs.writeFile('chart.png', result, function() { console.log('done'); });
+	fs.writeFile('chart.svg', result, function() { console.log('done'); });
 });
