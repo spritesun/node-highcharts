@@ -1,0 +1,20 @@
+To use, start your URL like /?chart= and then give it a chart object. See http://www.highcharts.com/ for info on what options are available.
+
+# EXAMPLE
+
+/?chart={"chart": { "defaultSeriesType": "line",  "width": 640, "height": 480 }, "series": [ { "data": [[4,1], [8,3], [6,1], [7,0]] }]}
+
+MAKE SURE YOU PUT PROPERTIES IN DOUBLE QUOTES!! jQuery.parseJSON() is used to parse that object from the URL and it craps out if you don't put properties in double quotes.  More on that http://api.jquery.com/jQuery.parseJSON/
+
+The code modifies your object in a couple of ways to make sure it works like modifying it to make sure it renders SVG, etc..
+
+# REQUIREMENTS
+
+You'll need jsdom to get this to run so execute 'npm jsdom' in the root directory of this project.
+
+
+# CREDITS
+Original concept and code by David Padbury, check out his original blog post on it http://blog.davidpadbury.com/2010/10/03/using-nodejs-to-render-js-charts-on-server/
+
+Also, John Resig, god of JQuery.
+
