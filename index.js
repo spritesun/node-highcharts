@@ -1,6 +1,7 @@
 var http	= require('http'),
 	parse	= require('url').parse,
 	spawn	= require('child_process').spawn,
+  fs = require('fs'),
 	jsdom	= require('jsdom');
 	
 var map = function(arr, func) {
@@ -15,36 +16,25 @@ var map = function(arr, func) {
 }
 
 var createHighchartsWindow = function(fn) {
-	var window 	= jsdom.jsdom().createWindow(),
-		script	= window.document.createElement('script');
-	
-	// Convince Highcharts that our window supports SVG's
-	window.SVGAngle = true;
-	
-	// jsdom doesn't yet support createElementNS, so just fake it up
-	window.document.createElementNS = function(ns, tagName) {
-		var elem = doc.createElement(tagName);	
-		elem.getBBox = function() {
-			return {
-				x: elem.offsetLeft,
-				y: elem.offsetTop,
-				width: elem.offsetWidth,
-				height: elem.offsetHeight
-			};
-		};
-		return elem;
-	};
-	
-	// Load scripts
-	jsdom.jQueryify(window, function() {
-		script.src = 'file://' + __dirname + '/highcharts/highcharts.src.js';
-		script.onload = function() {
-			if (this.readyState === 'complete') {
-				fn(window);
-			}
-		}
-	});
-}
+  jsdom.env('<html><head></head><body></body></html>', ['lib/jquery-1.4.2.min.js', 'lib/highcharts/highcharts.src.js'], function (errors, window){
+    // Convince Highcharts that our window supports SVG's
+    window.SVGAngle = true;
+    // jsdom doesn't yet support createElementNS, so just fake it up
+    window.document.createElementNS = function(ns, tagName) {
+      var elem = window.document.createElement(tagName);
+      elem.getBBox = function() {
+        return {
+          x: elem.offsetLeft,
+          y: elem.offsetTop,
+          width: elem.offsetWidth,
+          height: elem.offsetHeight
+        };
+      };
+      return elem;
+    };
+    fn(window);
+  });
+};
 
 this.server = http.createServer(function(request, response) {
 	console.log("request");
@@ -55,13 +45,12 @@ this.server = http.createServer(function(request, response) {
 		width		= query.width || 640,
 		height		= query.height || 480,
 		data		= [];
-		
+
 	if (query.data) {
 		map(query.data.split(','), function(i) {
 			data.push(parseFloat(this));
 		});
 	}
-	
 	if (chartType == null || data.length == 0) {
 		response.writeHeader(404, {'Content-Type': 'text/plain'});
 		response.write('usage: /chartType?data=0,1,2,3');
@@ -69,7 +58,9 @@ this.server = http.createServer(function(request, response) {
 		return;
 	}
 	
+  console.log('1');
 	createHighchartsWindow(function(window) {
+    console.log('3');
 		var $	= window.jQuery,
 			Highcharts 	= window.Highcharts,
 			document	= window.document,
@@ -95,7 +86,8 @@ this.server = http.createServer(function(request, response) {
 		});
 		
 		svg = $container.children().html();
-		
+  	// Generate SVG - just for debugging 
+    fs.writeFile('chart.svg', svg, function() { console.log('done'); });	
 		// Start convert
 		convert	= spawn('convert', ['svg:-', 'png:-']);
 
@@ -119,4 +111,4 @@ this.server = http.createServer(function(request, response) {
 	
 }).listen(2308);
 
-console.log('listening on 2308')
+console.log('listening on 2308');
