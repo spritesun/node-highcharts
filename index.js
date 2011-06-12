@@ -45,49 +45,45 @@ this.server = http.createServer(function(request, response) {
 		width		= query.width || 640,
 		height		= query.height || 480,
 		data		= [];
-
+    custom  = query.custom;    
 	if (query.data) {
 		map(query.data.split(','), function(i) {
 			data.push(parseFloat(this));
 		});
 	}
-	if (chartType == null || data.length == 0) {
-		response.writeHeader(404, {'Content-Type': 'text/plain'});
-		response.write('usage: /chartType?data=0,1,2,3');
-		response.end();
-		return;
-	}
-	
-  console.log('1');
 	createHighchartsWindow(function(window) {
-    console.log('3');
 		var $	= window.jQuery,
 			Highcharts 	= window.Highcharts,
 			document	= window.document,
 			$container	= $('<div id="container" />'),
 			chart, svg, convert;
 		
-		console.log('Generating ' + chartType + ' chart');
-		
 		$container.appendTo(document.body);
-		
-		chart = new Highcharts.Chart({
-			chart: {
-				defaultSeriesType: chartType,
-				renderTo: $container[0],
-				renderer: 'SVG',
-				width: width,
-				height: height
-			},
-			series: [{
-				animation: false,
-				data: data
-			}]
-		});
-		
-		svg = $container.children().html();
+    // Generate a chart from a custom JSON object 
+    if(custom) {
+      customChart = $.parseJSON(custom);
+      customChart.chart.renderTo = $container[0];
+      customChart.chart.renderer = 'SVG';
+      chart = new Highcharts.Chart(customChart);
+    }
+    // Generate a chart from data provided
+    if(data.length > 0) {	
+      chart = new Highcharts.Chart({
+        chart: {
+          defaultSeriesType: chartType,
+          renderTo: $container[0],
+          renderer: 'SVG',
+          width: width,
+          height: height
+        },
+        series: [{
+          data: data
+        }]
+      });
+	  }	
+    svg = $container.children().html();
   	// Generate SVG - just for debugging 
-    fs.writeFile('chart.svg', svg, function() { console.log('done'); });	
+    //fs.writeFile('chart.svg', svg, function() { console.log('done'); });	
 		// Start convert
 		convert	= spawn('convert', ['svg:-', 'png:-']);
 
@@ -95,7 +91,8 @@ this.server = http.createServer(function(request, response) {
 		response.writeHeader(200, {'Content-Type': 'image/png'});
 		
 		// Pump in the svg content
-		convert.stdin.write(svg);
+		console.log(svg);
+    convert.stdin.write(svg);
 		convert.stdin.end();
 		
 		// Write the output of convert straight to the response
