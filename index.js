@@ -52,11 +52,11 @@ this.server = http.createServer(function(request, response) {
     if (query.chart) {
       chartDefinition  = query.chart;    
     }
-    if (query.url) {
+    if (query.host) {
       var options = {
-        host: 'www.rjstatic.me',
+        host: query.host,
         port: 80,
-        path: "/" + query.url 
+        path: "/" + query.path 
       };
 
       http.get(options, function(res) {
