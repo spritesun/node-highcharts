@@ -37,51 +37,98 @@ var createHighchartsWindow = function(fn) {
 };
 
 this.server = http.createServer(function(request, response) {
-	var url = parse(request.url, true),
-	  query = (url.query || {}),
-    chartDefinition  = query.chart;    
-  if(!chartDefinition) {
-   return;
-  }
+  var url = parse(request.url, true),
+    query = (url.query || {});
+  
   createHighchartsWindow(function(window) {
-		var $	= window.jQuery,
+	  var $	= window.jQuery,
 			Highcharts 	= window.Highcharts,
 			document	= window.document,
 			$container	= $('<div id="container" />'),
-			chart, svg, convert;
-		
-		$container.appendTo(document.body);
-    customChart = $.parseJSON(chartDefinition);
-    customChart.chart.renderTo = $container[0];
-    customChart.chart.renderer = 'SVG';
-    chart = new Highcharts.Chart(customChart);
+			chart, svg, convert, chartDefinition;
     
-    svg = $container.children().html();
-  	
-    // Generate SVG - just for debugging 
-    fs.writeFile('chart.svg', svg, function() { console.log('done'); });	
-		// Start convert
-		if(svg) {
-      convert	= spawn('convert', ['svg:-', 'png:-']);
+    if (query.chart) {
+      chartDefinition  = query.chart;    
+    }
+    if (query.url) {
+      //$.get(query.url, function(data) {
+      //$.ajax({ url: 'rjstatic.me/highchart.json', success: function(data) {
+      //  chartDefinition = data;
+      //}});
+      var options = {
+        host: 'www.rjstatic.me',
+        port: 80,
+        path: "/" + query.url 
+      };
 
-      // We're writing an image, hopefully...
-      response.writeHeader(200, {'Content-Type': 'image/png'});
+      http.get(options, function(res) {
+        res.setEncoding('utf8');
+        res.on('data', function (chunk) {
+          chartDefinition = chunk;
+          console.log('BODY: ' + chunk);
+          ChartRender();  
+          /* try {
+            console.log('trying');
+            var chartObject = JSON.parse(chartDefinition);
+            if (chartObject.results.length > 0) {
+              render();
+            }
+          }
+          catch (err) {
+            console.log('still waiting...');  
+          }
+          */
+        });
+        //res.on('end', function (chunk) {
+          //render();
+          //console.log(chartDefinition);	
+        //});
+
+        console.log("Got response: " + res.statusCode);
+      }).on('error', function(e) {
+        console.log("Got error: " + e.message);
+      });    
+    }
+    function ChartRender() {
+      console.log('Render started');
+      console.log(chartDefinition);	
+      if(!chartDefinition) {
+        response.end();
+      }
+      $container.appendTo(document.body);
+      chartObject = $.parseJSON(chartDefinition);
+      chartObject.chart.renderTo = $container[0];
+      chartObject.chart.renderer = 'SVG';
+      chart = new Highcharts.Chart(chartObject);
       
-      // Pump in the svg content
-      convert.stdin.write(svg);
-      convert.stdin.end();
+      svg = $container.children().html();
       
-      // Write the output of convert straight to the response
-      convert.stdout.on('data', function(data) {
-        response.write(data);
+      // Generate SVG - just for debugging 
+      fs.writeFile('chart.svg', svg, function() { console.log('done'); });	
+      // Start convert
+      if(svg) {
+        convert	= spawn('convert', ['svg:-', 'png:-']);
+
+        // We're writing an image, hopefully...
+        response.writeHeader(200, {'Content-Type': 'image/png'});
+        
+        // Pump in the svg content
+        convert.stdin.write(svg);
+        convert.stdin.end();
+        
+        // Write the output of convert straight to the response
+        convert.stdout.on('data', function(data) {
+          response.write(data);
+        });
+      }
+
+      // When we're done, we're done
+      convert.on('exit', function(code) {
+        response.end();	
       });
     }
-
-		// When we're done, we're done
-		convert.on('exit', function(code) {
-			response.end();	
-		});
 	});
+  
 	
 }).listen(2308);
 
