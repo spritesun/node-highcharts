@@ -45,16 +45,14 @@ this.server = http.createServer(function(request, response) {
 			Highcharts 	= window.Highcharts,
 			document	= window.document,
 			$container	= $('<div id="container" />'),
-			chart, svg, convert, chartDefinition;
-    
+			chart, svg, convert, 
+      chartDefinition = '', 
+      chartObject = {};
+   
     if (query.chart) {
       chartDefinition  = query.chart;    
     }
     if (query.url) {
-      //$.get(query.url, function(data) {
-      //$.ajax({ url: 'rjstatic.me/highchart.json', success: function(data) {
-      //  chartDefinition = data;
-      //}});
       var options = {
         host: 'www.rjstatic.me',
         port: 80,
@@ -64,25 +62,21 @@ this.server = http.createServer(function(request, response) {
       http.get(options, function(res) {
         res.setEncoding('utf8');
         res.on('data', function (chunk) {
-          chartDefinition = chunk;
-          console.log('BODY: ' + chunk);
-          ChartRender();  
-          /* try {
-            console.log('trying');
-            var chartObject = JSON.parse(chartDefinition);
-            if (chartObject.results.length > 0) {
-              render();
+          if(chunk != 'undefined') {
+            chartDefinition += chunk;
+          }
+          try {
+            console.log('trying...');
+            chartObject = $.parseJSON(chartDefinition);
+            if (chartObject.chart.defaultSeriesType) {
+              ChartRender();
             }
           }
           catch (err) {
             console.log('still waiting...');  
           }
-          */
+          
         });
-        //res.on('end', function (chunk) {
-          //render();
-          //console.log(chartDefinition);	
-        //});
 
         console.log("Got response: " + res.statusCode);
       }).on('error', function(e) {
@@ -91,12 +85,12 @@ this.server = http.createServer(function(request, response) {
     }
     function ChartRender() {
       console.log('Render started');
-      console.log(chartDefinition);	
+      //console.log(chartDefinition);	
       if(!chartDefinition) {
         response.end();
       }
       $container.appendTo(document.body);
-      chartObject = $.parseJSON(chartDefinition);
+      //chartObject = $.parseJSON(chartDefinition);
       chartObject.chart.renderTo = $container[0];
       chartObject.chart.renderer = 'SVG';
       chart = new Highcharts.Chart(chartObject);
