@@ -1,12 +1,19 @@
 To use, start your URL like /?chart= and then give it a chart object. See http://www.highcharts.com/ for info on what options are available.
 
-# EXAMPLE
+# SIMPLE EXAMPLE
 
 /?chart={"chart": { "defaultSeriesType": "line",  "width": 640, "height": 480 }, "series": [ { "data": [[4,1], [8,3], [6,1], [7,0]] }]}
 
 MAKE SURE YOU PUT PROPERTIES IN DOUBLE QUOTES!! jQuery.parseJSON() is used to parse that object from the URL and it craps out if you don't put properties in double quotes.  More on that http://api.jquery.com/jQuery.parseJSON/
 
 The code modifies your object in a couple of ways to make sure it works like modifying it to make sure it renders SVG, etc..
+
+# REMOTE DATA EXAMPLE
+
+/?host=mydomain.com&path=myHighChartsObject.json
+
+If you have a LARGE amount of data to graph, URL character limits in browswers will get in your way if you depend on the "chart" parameter.  Instead, you can save the HighCharts object to a file on a server and tell the Node Highcharts where to find that object by using the "host" and "path" paramters.
+
 
 # REQUIREMENTS
 

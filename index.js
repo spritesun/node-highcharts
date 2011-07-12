@@ -1,18 +1,18 @@
-var http	= require('http'),
-	parse	= require('url').parse,
-	spawn	= require('child_process').spawn,
+var http  = require('http'),
+  parse  = require('url').parse,
+  spawn  = require('child_process').spawn,
   fs = require('fs'),
-	jsdom	= require('jsdom');
-	
+  jsdom  = require('jsdom');
+  
 var map = function(arr, func) {
-	var i,
-		results = [];
-	
-	for (i = 0; i < arr.length; i++) {
-		results.push(func.apply(arr[i], [i]));
-	}
-	
-	return results;
+  var i,
+    results = [];
+  
+  for (i = 0; i < arr.length; i++) {
+    results.push(func.apply(arr[i], [i]));
+  }
+  
+  return results;
 }
 
 var createHighchartsWindow = function(fn) {
@@ -41,16 +41,22 @@ this.server = http.createServer(function(request, response) {
     query = (url.query || {});
   
   createHighchartsWindow(function(window) {
-	  var $	= window.jQuery,
-			Highcharts 	= window.Highcharts,
-			document	= window.document,
-			$container	= $('<div id="container" />'),
-			chart, svg, convert, 
+    var $  = window.jQuery,
+      Highcharts   = window.Highcharts,
+      document  = window.document,
+      $container  = $('<div id="container" />'),
+      chart, svg, convert, 
       chartDefinition = '', 
       chartObject = {};
    
     if (query.chart) {
-      chartDefinition  = query.chart;    
+      try {
+        chartObject = $.parseJSON(query.chart);
+        chartRender();
+      }
+      catch(err) {
+        console.log(err);
+      }
     }
     if (query.host) {
       var options = {
@@ -62,14 +68,12 @@ this.server = http.createServer(function(request, response) {
       http.get(options, function(res) {
         res.setEncoding('utf8');
         res.on('data', function (chunk) {
-          if(chunk != 'undefined') {
-            chartDefinition += chunk;
-          }
+          chartDefinition += chunk;
           try {
             console.log('trying...');
             chartObject = $.parseJSON(chartDefinition);
             if (chartObject.chart.defaultSeriesType) {
-              ChartRender();
+              chartRender();
             }
           }
           catch (err) {
@@ -83,14 +87,13 @@ this.server = http.createServer(function(request, response) {
         console.log("Got error: " + e.message);
       });    
     }
-    function ChartRender() {
+    function chartRender() {
       console.log('Render started');
-      //console.log(chartDefinition);	
+      //console.log(chartDefinition);  
       if(!chartDefinition) {
         response.end();
       }
       $container.appendTo(document.body);
-      //chartObject = $.parseJSON(chartDefinition);
       chartObject.chart.renderTo = $container[0];
       chartObject.chart.renderer = 'SVG';
       chart = new Highcharts.Chart(chartObject);
@@ -98,10 +101,10 @@ this.server = http.createServer(function(request, response) {
       svg = $container.children().html();
       
       // Generate SVG - just for debugging 
-      fs.writeFile('chart.svg', svg, function() { console.log('done'); });	
+      fs.writeFile('chart.svg', svg, function() { console.log('done'); });  
       // Start convert
       if(svg) {
-        convert	= spawn('convert', ['svg:-', 'png:-']);
+        convert  = spawn('convert', ['svg:-', 'png:-']);
 
         // We're writing an image, hopefully...
         response.writeHeader(200, {'Content-Type': 'image/png'});
@@ -118,12 +121,12 @@ this.server = http.createServer(function(request, response) {
 
       // When we're done, we're done
       convert.on('exit', function(code) {
-        response.end();	
+        response.end();  
       });
     }
-	});
+  });
   
-	
+  
 }).listen(2308);
 
 console.log('listening on 2308');
