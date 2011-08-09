@@ -9,7 +9,7 @@
   },
   "keywords": ["highcharts", "charts"],
   "dependencies": {
-    "jsdom": ">= 0.1.9"
+    "jsdom": "0.2.1"
   },
   "main": "./lib/node-highcharts",
   "engines": { "node": ">= 0.3.0" }
