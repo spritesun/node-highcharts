@@ -90,24 +90,24 @@ this.server = http.createServer(function(request, response) {
     function chartRender() {
       console.log('Render started');
       //console.log(chartDefinition);  
-      if(!chartDefinition) {
-        response.end();
-      }
+      // if(!chartDefinition) {
+      //   response.end();
+      // }
       $container.appendTo(document.body);
       chartObject.chart.renderTo = $container[0];
       chartObject.chart.renderer = 'SVG';
       chart = new Highcharts.Chart(chartObject);
       
-      svg = $container.children().html();
+      svg = $container.children().html().replace(/style="0[^"]*"/g, "");
       
       // Generate SVG - just for debugging 
-      fs.writeFile('chart.svg', svg, function() { console.log('done'); });  
+      // fs.writeFile('chart.svg', svg, function() { console.log('done'); });  
       // Start convert
       if(svg) {
         convert  = spawn('convert', ['svg:-', 'png:-']);
 
         // We're writing an image, hopefully...
-        response.writeHeader(200, {'Content-Type': 'image/png'});
+        response.writeHead(200, {'Content-Type': 'image/png'});
         
         // Pump in the svg content
         convert.stdin.write(svg);
