@@ -36,6 +36,8 @@ var createHighchartsWindow = function(fn) {
   });
 };
 
+var port = process.env.PORT || 2308;
+
 this.server = http.createServer(function(request, response) {
   var url = parse(request.url, true),
     query = (url.query || {});
@@ -127,6 +129,7 @@ this.server = http.createServer(function(request, response) {
   });
   
   
-}).listen(2308);
+}).listen(port, function() {
+  console.log('listening on ' + port);
+});
 
-console.log('listening on 2308');
